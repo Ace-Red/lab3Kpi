@@ -66,7 +66,7 @@ class Provider2ObjectBuilder(ObjectBuilder):
     def extract_from_source(self) -> None:
         page = [0]
         page_n = 1
-        while len(page) > 0:
+        while len(page) > 0 and page_n <= 1:  # =========================== Убрать
             page = requests.get('http://127.0.0.1:5002/price-list?page=' + str(page_n)).json()
             print(len(page))
             page_n += 1
@@ -99,14 +99,15 @@ class OwnObjectBuilder(ObjectBuilder):
         return model
 
     def extract_from_source(self) -> None:
-        self.model.set(self._model.select_all_db_data())
+        self._model.set(self._model.select_all_db_data())
 
     def reformat(self) -> None:
         my_list = []
         for row in self.model.models:
-            a = {"ticket_id": row[0], "seat_number": str(row[1]), "purchase_date": str(row[2]), "user_id": str(row[3]),
-                 "flight_id": str(row[4]), "ticket_type": str(row[5]), "price": str(row[6]),
-                 "is_active": str(row[7])
+            a = {"ticket_id": row[0], "seat_number": row[1], "purchase_date": str(row[2]), "user_id": row[3],
+                 "flight_id": row[4], "departure_time": str(row[5]), "origin": str(row[6]),
+                 "destination": str(row[7]), "ticket_type": str(row[8]), "price": row[9],
+                 "is_active": str(row[10])
                  }
             my_list.append(a)
         self._model.set(my_list)
@@ -160,7 +161,7 @@ class OwnModel:
         rows = []
         with self.conn.cursor() as cursor:
             cursor.execute(
-                'SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."ticket_type", "FlightLabKpi2".public."public.Ticket"."price", "FlightLabKpi2".public."public.Ticket"."is_active", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id","FlightLabKpi2".public."public.Flight"."departure_time","FlightLabKpi2".public."public.Flight"."origin","FlightLabKpi2".public."public.Flight"."destination" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id"')
+                'SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id", "FlightLabKpi2".public."public.Flight"."departure_time", "FlightLabKpi2".public."public.Flight"."origin", "FlightLabKpi2".public."public.Flight"."destination","FlightLabKpi2".public."public.Ticket"."ticket_type","FlightLabKpi2".public."public.Ticket"."price","FlightLabKpi2".public."public.Ticket"."is_active" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id"')
             rows = cursor.fetchall()
         return rows
 
@@ -177,14 +178,13 @@ class OwnModel:
 
         with self.conn.cursor() as cursor:
             cursor.execute(
-                '''SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."ticket_type", "FlightLabKpi2".public."public.Ticket"."price", "FlightLabKpi2".public."public.Ticket"."is_active", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id","FlightLabKpi2".public."public.Flight"."departure_time","FlightLabKpi2".public."public.Flight"."origin","FlightLabKpi2".public."public.Flight"."destination" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id" WHERE ticket_id='%s' ''' %
-                args["id"])
+                '''SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id", "FlightLabKpi2".public."public.Flight"."departure_time", "FlightLabKpi2".public."public.Flight"."origin", "FlightLabKpi2".public."public.Flight"."destination","FlightLabKpi2".public."public.Ticket"."ticket_type","FlightLabKpi2".public."public.Ticket"."price","FlightLabKpi2".public."public.Ticket"."is_active" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id"''')
             rows = cursor.fetchall()
         args = self.reform(rows[-1])
 
         with self.conn.cursor() as cursor:
             cursor.execute(
-                '''INSERT INTO "public.ticket_cache" ("ticket_id", "seat_number", "purchase_date", "ticket_type", "price", "is_active", "user_id", "flight_id","departure_time","origin","destination") VALUES (%s,%s,'%s','%s',%s,%s,%s,%s,'%s','%s','%s')''' %
+                '''INSERT INTO ticket_cache ("ticket_id","seat_number", "purchase_date", "ticket_type", "price", "is_active", "user_id", "flight_id","departure_time","destination","origin") VALUES (%s,%s,'%s','%s',%s,%s,%s,%s,'%s','%s','%s')''' %
                 (str(args["ticket_id"]), str(args["seat_number"]), str(args["purchase_date"]), str(args["ticket_type"]),
                  str(args["price"]),
                  str(args["is_active"]), str(args["user_id"]), str(args["flight_id"]), str(args["departure_time"]),
@@ -194,7 +194,7 @@ class OwnModel:
     def delete(self, id):
         with self.conn.cursor() as cursor:
             cursor.execute('DELETE FROM "public.Ticket" WHERE "ticket_id"=' + str(id))
-            cursor.execute('DELETE FROM "public.ticket_cache" WHERE "ticket_id"=' + str(id))
+            cursor.execute('DELETE FROM ticket_cache WHERE "ticket_id"=' + str(id))
         self.conn.commit()
 
     def update(self, args):
@@ -210,17 +210,19 @@ class OwnModel:
 
         with self.conn.cursor() as cursor:
             cursor.execute(
-                '''SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."ticket_type", "FlightLabKpi2".public."public.Ticket"."price", "FlightLabKpi2".public."public.Ticket"."is_active", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id","FlightLabKpi2".public."public.Flight"."departure_time","FlightLabKpi2".public."public.Flight"."origin","FlightLabKpi2".public."public.Flight"."destination" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id" WHERE ticket_id='%s'  ''' %
-                args["id"])
+                '''SELECT "FlightLabKpi2".public."public.Ticket".ticket_id, "FlightLabKpi2".public."public.Ticket"."seat_number", "FlightLabKpi2".public."public.Ticket"."purchase_date", "FlightLabKpi2".public."public.Ticket"."user_id", "FlightLabKpi2".public."public.Ticket"."flight_id", "FlightLabKpi2".public."public.Flight"."departure_time", "FlightLabKpi2".public."public.Flight"."origin", "FlightLabKpi2".public."public.Flight"."destination","FlightLabKpi2".public."public.Ticket"."ticket_type","FlightLabKpi2".public."public.Ticket"."price","FlightLabKpi2".public."public.Ticket"."is_active" FROM "FlightLabKpi2".public."public.Ticket" INNER JOIN "FlightLabKpi2".public."public.Flight" ON "FlightLabKpi2".public."public.Flight"."flight_id" = "FlightLabKpi2".public."public.Ticket"."flight_id" WHERE ticket_id='%s'  ''' %
+                args["ticket_id"])
             rows = cursor.fetchall()
         args = self.reform(rows[-1])
 
-        query_str = 'UPDATE "public.ticket_cache" SET '
+        query_str = 'UPDATE ticket_cache SET '
         for key, value in args.items():
             if key != 'ticket_id' and value != None:
+                if type(value) == float:
+                    value = int(value)
                 query_str += '"' + key + '"=' + "'" + str(value) + "',"
         query_str = query_str[0:-1]
-        query_str += ' WHERE ""."ticket_id"=' + str(args["ticket_id"])
+        query_str += ' WHERE "ticket_id"=' + str(args["ticket_id"])
         with self.conn.cursor() as cursor:
             cursor.execute(query_str)
         self.conn.commit()
@@ -256,7 +258,7 @@ class OwnModel:
         self.conn = SingletonDB().conn
 
     def reform(self, row):
-        return {"ticket_id": row[0], "seat_number": row[1],
-                "purchase_date": str(row[2]), "ticket_type": str(row[3]), "price": row[4],
-                "is_active": str(row[5]), "user_id": row[6], "flight_id": row[7], "departure_time": row[8],
-                "origin": row[9], "destination": row[10]}
+        return {"ticket_id": row[0], "seat_number": row[1], "purchase_date": str(row[2]), "user_id": row[3],
+                "flight_id": row[4], "departure_time": str(row[5]), "origin": str(row[6]),
+                "destination": str(row[7]), "ticket_type": str(row[8]), "price": row[9],
+                "is_active": str(row[10])}

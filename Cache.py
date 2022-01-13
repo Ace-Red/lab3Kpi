@@ -75,7 +75,8 @@ class CacheProduct(metaclass=SingletonCache):
         self.service_2_cache = q3.get()
         for i in range(0, len(self.service_1_cache)):
             self.service_1_cache[i]["ticket_id"] += 150000
-            self.service_2_cache[i]["ticket_details_id"] += 300000
+        for i in range(0, len(self.service_2_cache)):
+            self.service_2_cache[i]["ticket_details_id"] += 151000
         with conn.cursor() as cursor:
             cursor.execute('TRUNCATE ticket_cache')
             execute_values(cursor,
@@ -83,9 +84,9 @@ class CacheProduct(metaclass=SingletonCache):
                            # ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')''' % (args["product_name"], args["desciption"], str(args["sale_type_id"]), str(args["start_date"]), str(args["end_date"]), str(args["delivery_type_id"]), str(args["delivery_price"]), str(args["delivery_time"]), str(args["price"]),  str(args["seller_id"])))
                            [(self.choose_type_id(args), str(args["seat_number"]),str(args["purchase_date"]),
                              str(args["ticket_type"]),
-                             args["price"],
+                             int(float(args["price"])),
                              str(args["is_active"]), args["user_id"], args["flight_id"],
-                             str(args["departure_time"]), str(args["origin"]), str(args["destination"]))for args in self.own_cache + self.service_1_cache + self.service_2_cache])
+                             str(args["departure_time"]), str(args["destination"]), str(args["origin"]))for args in self.own_cache + self.service_1_cache + self.service_2_cache])
         conn.commit()
         p1.join()
         p2.join()
@@ -139,5 +140,5 @@ class CacheProduct(metaclass=SingletonCache):
                  "is_active": str(row[5]), "user_id": row[6], "flight_id": row[7], "departure_time": row[8],
                  "origin": row[9], "destination": row[10]}
             result.append(a)
-        print(result)
+        #print(result)
         return result
