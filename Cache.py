@@ -118,7 +118,7 @@ class CacheProduct(metaclass=SingletonCache):
         if args['destination']:
             filt_opt.append(['"destination"=', args['destination']])
         if args['date']:
-            filt_opt.append(['"date"=', args['date']])
+            filt_opt.append(['"departure_time"=', args['date']])
         if args['minPrice']:
             filt_opt.append(['"price">', args['minPrice']])
         if args['maxPrice']:
