@@ -66,7 +66,7 @@ class Provider2ObjectBuilder(ObjectBuilder):
     def extract_from_source(self) -> None:
         page = [0]
         page_n = 1
-        while len(page) > 0 and page_n <= 1:  # =========================== Убрать
+        while len(page) > 0:  # and page_n <= 1:   =========================== Убрать
             page = requests.get('http://127.0.0.1:5002/price-list?page=' + str(page_n)).json()
             print(len(page))
             page_n += 1
@@ -185,7 +185,8 @@ class OwnModel:
         with self.conn.cursor() as cursor:
             cursor.execute(
                 '''INSERT INTO ticket_cache ("ticket_id","seat_number", "purchase_date", "ticket_type", "price", "is_active", "user_id", "flight_id","departure_time","destination","origin") VALUES (%s,%s,'%s','%s',%s,%s,%s,%s,'%s','%s','%s')''' %
-                (str(args["ticket_id"]), str(args["seat_number"]), str(args["purchase_date"]), str(args["ticket_type"]),
+                (str(int(args["ticket_id"])), str(args["seat_number"]), str(args["purchase_date"]),
+                 str(args["ticket_type"]),
                  str(args["price"]),
                  str(args["is_active"]), str(args["user_id"]), str(args["flight_id"]), str(args["departure_time"]),
                  str(args["origin"]), str(args["destination"])))
